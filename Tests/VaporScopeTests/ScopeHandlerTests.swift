@@ -9,7 +9,7 @@
 import Vapor
 import XCTVapor
 
-final class OAuthHandlerTests: XCTestCase {
+final class ScopeHandlerTests: XCTestCase {
     
     var app: Application!
     
