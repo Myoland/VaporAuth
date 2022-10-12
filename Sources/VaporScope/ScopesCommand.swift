@@ -21,7 +21,7 @@ public final class ScopesCommand<T: ScopeCarrier>: Command {
     }
     public var carrierType: T.Type
 
-    init(Payload: T.Type = T.self) { carrierType = Payload}
+    public init(Payload: T.Type = T.self) { carrierType = Payload}
     
     public func run(using context: CommandContext, signature: Signature) throws {
         let routes = context.application.routes
