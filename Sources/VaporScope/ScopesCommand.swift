@@ -11,7 +11,7 @@ import Vapor
 /// Print Route and Scope
 ///
 /// Vappr run scope
-public final class ScopesCommand: Command {
+public final class ScopesCommand<T: ScopeCarrier>: Command {
     public struct Signature: CommandSignature {
         public init() { }
     }
@@ -19,8 +19,9 @@ public final class ScopesCommand: Command {
     public var help: String {
         return "Displays all routes' required scopes."
     }
-    
-    init() { }
+    public var carrierType: T.Type
+
+    init(Payload: T.Type = T.self) { carrierType = Payload}
     
     public func run(using context: CommandContext, signature: Signature) throws {
         let routes = context.application.routes
@@ -29,7 +30,7 @@ public final class ScopesCommand: Command {
 
             var lines: [[ConsoleText]] = []
             let desp = "\(route.responder)"
-            let regex = "(?<=ScopeHelper\\(scopes: \\[\\\")[\\w].*?(?=\\\"\\])"
+            let regex = "(?<=VaporScope\\.ScopeGuardMiddleware<\(String(reflecting: carrierType))>\\(scopes\\: \\[\\\")(.*?)(?=\\\"\\])"
             let matchs = RegularExpression(regex: regex, validateString: desp)
             for (idx, match) in matchs.enumerated() {
                 var column: [ConsoleText] = []
