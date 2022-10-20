@@ -121,7 +121,15 @@ public struct ScopeResourceHolder<T: ScopeCarrier> {
         _ path: PathComponent...,
         configure: @escaping (ScopeResourceHolder<T>) throws -> ()
     ) rethrows {
-        try root.grouped(path).scope(resource: resource, by: T.self, configure: configure)
+        let gourded = root.grouped(path)
+        try gourded.scope(resource: resource, by: T.self, configure: configure)
+    }
+}
+
+extension ScopeResourceHolder {
+    @discardableResult
+    public func all() -> ScopedRouterBundler<T> {
+        ScopedRouterBundler<T>(root: root, scope: [Scope(r: resource, a: Scope.ACTION_SET_MARK).raw])
     }
 }
 
@@ -297,5 +305,4 @@ public extension RoutesBuilder {
         )
     }
 }
-
 
