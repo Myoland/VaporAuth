@@ -36,7 +36,7 @@ public struct ScopeHolder<T: ScopeCarrier> {
         resource: String,
         builder: @escaping (ScopeResourceHolder<T>) throws -> ()
     ) rethrows -> Self {
-        try builder(ScopeResourceHolder<T>(root: root, resource: resource))
+        try builder(ScopeResourceHolder<T>(root: root, resources: [resource]))
         return self
     }
     
@@ -88,7 +88,7 @@ extension ScopeHolder {
 public struct ScopeResourceHolder<T: ScopeCarrier> {
     
     let root: RoutesBuilder
-    let resource: String
+    let resources: [String]
     
     
     /// Attach action.
@@ -103,7 +103,7 @@ public struct ScopeResourceHolder<T: ScopeCarrier> {
     public func with(
         action: String
     ) -> ScopedRouterBundler<T> {
-        ScopedRouterBundler<T>(root: root, scope: [Scope(r: resource, a: action).raw])
+        ScopedRouterBundler<T>(root: root, scope: resources.map { Scope(r: $0, a: action).raw })
     }
     
     /// Helping group paths.
@@ -122,14 +122,31 @@ public struct ScopeResourceHolder<T: ScopeCarrier> {
         configure: @escaping (ScopeResourceHolder<T>) throws -> ()
     ) rethrows {
         let gourded = root.grouped(path)
-        try gourded.scope(resource: resource, by: T.self, configure: configure)
+        try gourded.scope(resource: resources, by: T.self, configure: configure)
     }
+    
+    public func group(
+        _ path: PathComponent...,
+        resource: String,
+        builder: @escaping (ScopeResourceHolder<T>) throws -> ()
+    ) rethrows {
+        let gourded = root.grouped(path)
+        try gourded.scope(resource: [resource] + resources, by: T.self, configure: builder)
+    }
+    
+    public func nest(
+        resource: String,
+        builder: @escaping (ScopeResourceHolder<T>) throws -> ()
+    ) rethrows {
+        try builder(ScopeResourceHolder<T>(root: root, resources: [resource] + resources))
+    }
+    
 }
 
 extension ScopeResourceHolder {
     @discardableResult
     public func all() -> ScopedRouterBundler<T> {
-        ScopedRouterBundler<T>(root: root, scope: [Scope(r: resource, a: Scope.ACTION_SET_MARK).raw])
+        ScopedRouterBundler<T>(root: root, scope: resources.map { Scope(r: $0, a: Scope.ACTION_SET_MARK).raw })
     }
 }
 
@@ -221,7 +238,17 @@ public extension RoutesBuilder {
         configure: @escaping (ScopeResourceHolder<T>) throws -> ()
     ) rethrows {
         try configure(ScopeResourceHolder<T>(
-            root: self, resource: resource
+            root: self, resources: [resource]
+        ))
+    }
+    
+    internal func scope<T: ScopeCarrier>(
+        resource: [String],
+        by carrier: T.Type = T.self,
+        configure: @escaping (ScopeResourceHolder<T>) throws -> ()
+    ) rethrows {
+        try configure(ScopeResourceHolder<T>(
+            root: self, resources: resource
         ))
     }
 }
@@ -301,7 +328,7 @@ public extension RoutesBuilder {
         by carrier: T.Type = T.self
     ) -> ScopeResourceHolder<T> {
         ScopeResourceHolder<T>(
-            root: self, resource: resource
+            root: self, resources: [resource]
         )
     }
 }
