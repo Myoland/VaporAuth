@@ -29,7 +29,7 @@ public struct Scope {
     let resource: String
     let action: String
     
-    init(r:String, a: String) {
+    public init(r:String, a: String) {
         resource = r
         action = a
     }
