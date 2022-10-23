@@ -14,7 +14,7 @@ struct ScopeWrapper {
     let raw: String
     init(raw: String) {
         self.raw = raw
-        self.scope = Scope(raw: raw)
+        self.scope = Scope(rawValue: raw)
     }
 }
 

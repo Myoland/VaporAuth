@@ -21,7 +21,9 @@ import AsyncHTTPClient
 ///
 /// Joined by `RESOURCE_LINKER`, a Resource may contains mutiple sub items,
 /// which also show the relation between them.
-public struct Scope {
+public struct Scope: RawRepresentable {
+    public typealias RawValue = String
+    
     public static let SEPARATER: Character = ":"
     public static let RESOURCE_LINKER: Character = "."
     public static let ACTION_SET_MARK: String = "*"
@@ -34,14 +36,18 @@ public struct Scope {
         self.action = action
     }
     
-    init?(raw: String) {
-        let p = raw.split(separator: Scope.SEPARATER)
+    public init?(rawValue: RawValue) {
+        let p = rawValue.split(separator: Scope.SEPARATER)
         if p.count != 2 {
             return nil
         }
         let r = p[0]
         let a = p[1]
         self.init(resource:String(r), action:String(a))
+    }
+    
+    public var rawValue: RawValue {
+        return "\(resource)\(Scope.SEPARATER)\(action)"
     }
     
     /// The parent Scope
@@ -56,12 +62,6 @@ public struct Scope {
         let p = self.resource.index(before: ps)
         let r = self.resource[...p]
         return .init(resource: String(r), action: self.action)
-    }
-}
-
-extension Scope {
-    public var raw: String {
-        return "\(resource)\(Scope.SEPARATER)\(action)"
     }
 }
 
