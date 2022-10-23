@@ -22,16 +22,16 @@ import AsyncHTTPClient
 /// Joined by `RESOURCE_LINKER`, a Resource may contains mutiple sub items,
 /// which also show the relation between them.
 public struct Scope {
-    static let SEPARATER: Character = ":"
-    static let RESOURCE_LINKER: Character = "."
-    static let ACTION_SET_MARK: String = "*"
+    public static let SEPARATER: Character = ":"
+    public static let RESOURCE_LINKER: Character = "."
+    public static let ACTION_SET_MARK: String = "*"
     
     let resource: String
     let action: String
     
-    public init(r:String, a: String) {
-        resource = r
-        action = a
+    public init(resource:String, action: String) {
+        self.resource = resource
+        self.action = action
     }
     
     init?(raw: String) {
@@ -41,7 +41,7 @@ public struct Scope {
         }
         let r = p[0]
         let a = p[1]
-        self.init(r:String(r), a:String(a))
+        self.init(resource:String(r), action:String(a))
     }
     
     /// The parent Scope
@@ -55,7 +55,7 @@ public struct Scope {
         }
         let p = self.resource.index(before: ps)
         let r = self.resource[...p]
-        return .init(r: String(r), a: self.action)
+        return .init(resource: String(r), action: self.action)
     }
 }
 
@@ -113,7 +113,7 @@ extension Scope {
     public static func <= (lhs: Scope, rhs: Scope) -> Bool {
         var r = rhs
         if rhs.action == Scope.ACTION_SET_MARK {
-            r = Scope(r: rhs.resource, a: lhs.action)
+            r = Scope(resource: rhs.resource, action: lhs.action)
         }
         for parent in lhs {
             if parent == r {
@@ -126,7 +126,7 @@ extension Scope {
     public static func >= (lhs: Scope, rhs: Scope) -> Bool {
         var l = lhs
         if lhs.action == Scope.ACTION_SET_MARK {
-            l = Scope(r: lhs.resource, a: rhs.action)
+            l = Scope(resource: lhs.resource, action: rhs.action)
         }
         for parent in rhs {
             if parent == l {
