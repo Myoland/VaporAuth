@@ -13,11 +13,11 @@ final class ScopeWrapperTests: XCTestCase {
     func testWrapperCreate() async throws {
         let a = ScopeWrapper(raw: "recommend.release:read")
         XCTAssertNotNil(a.scope)
-        XCTAssertEqual(a.raw, a.scope?.raw)
+        XCTAssertEqual(a.raw, a.scope?.rawValue)
         
         let b = ScopeWrapper(raw: "recommend.release:*")
         XCTAssertNotNil(b.scope)
-        XCTAssertEqual(b.raw, b.scope?.raw)
+        XCTAssertEqual(b.raw, b.scope?.rawValue)
         
         let c = ScopeWrapper(raw: "recommend.release")
         XCTAssertNil(c.scope)

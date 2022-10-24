@@ -10,6 +10,7 @@ import Vapor
 
 public extension Route {
     
+    @discardableResult
     func scope<T: ScopeCarrier>(
         with scopes: [String],
         by carrier: T.Type

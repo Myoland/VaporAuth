@@ -86,4 +86,27 @@ final class ScopeCarrierTests: XCTestCase {
         })
     }
     
+    
+    func testGuardMiddleware() async throws {
+        app.grouped(User.guardMiddleware()).on(.GET, "login") { req -> HTTPStatus in
+            return .ok
+        }
+            
+        app.on(.GET, "nope") { req -> HTTPStatus in
+            return .ok
+        }
+        
+        let u = User.dummy(scope: ["all.part:read"])
+        let encoded = try app.jwt.signers.sign(u)
+        
+        try app.testable(method: .running).test(.GET, "login", beforeRequest: { request in
+        }, afterResponse: { response in
+            XCTAssertEqual(response.status, .unauthorized)
+        })
+        
+        try app.testable(method: .running).test(.GET, "nope", beforeRequest: { request in
+        }, afterResponse: { response in
+            XCTAssertEqual(response.status, .ok)
+        })
+    }
 }
