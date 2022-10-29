@@ -2,6 +2,24 @@
 
 VaporScope is a library to use Scope in Vapor.
 
+- [Installation](#installation)
+    - [SPM](#swift-package-manager)
+- [Usage](#usage)
+    - [Requirement](#requirement)
+    - [Define a payload](#define-a-payload)
+    - [Tips](#tips)
+        - [Encode and Decode](#encode-and-decode)
+        - [Login](#login)
+        - [Authenticator](#authenticator)
+    - [Scope](#scope)
+        - [ScopeHandler](#scopehandler)
+        - [GuardMiddleware](#guardmiddleware)
+    - [Routes](#routes)
+        - [Easiest](#easiest)
+        - [Nicer](#nicer)
+        - [Ultimate](#ultimate)
+
+
 ## Installation
 
 ### Swift Package Manager
@@ -49,7 +67,7 @@ For more detail, go to [ScopeCarrier+Testable.swift](./Tests/VaporScopeTests/Uti
 
 Based on `JWTPayload`, it's for sure that you can encode or decode your payload for further transmission.
 
-You should know how we get payload and decode it.
+You should know how we get the payload and decode it.
 
 ```Swift
 // Encode
@@ -74,7 +92,7 @@ try await user.authenticate(request: request)
 
 #### Authenticator
 
-We usually create a `Middleware` helping login a user.
+We usually create a `Middleware` to help login a user.
 
 It is how:
 
@@ -86,7 +104,7 @@ route.group(User.authenticator()) {
 
 ### Scope
 
-In this part we will show how to use `VaporScope` for Scope-based authentication.
+In this part, we will show how to use `VaporScope` for Scope-based authentication.
 
 In [ScopeHandler.swift](./Sources/VaporScope/ScopeHandler.swift), we define the basic logic for assearting scopes. See `ScopeHandler.assertScopes(_:carried:)` for more detail.
 
@@ -115,3 +133,85 @@ route.routes.grouped([
     User.guardMiddleware(with: ["one", "two"])
 ]).get("action", use: handler)
 ```
+
+### Routes
+
+Based on `GuardMiddleware`, we can easily use it when building routes.
+
+After some experiments, we found it is better that scopes directly attach to the route endpoint. Creating some language sugar will cause RouteBuilder to be messy.
+
+There are some ways to do this.
+
+All examples can be found in [RouteScopeTests](./Tests/VaporScopeTests/MiddleWare/RouteScopeTests.swift)
+
+#### Easiest
+
+Using String! And you can use `enum` to make it nice.
+
+``` Swift
+
+extension A_Model {
+    enum Scopes: String {
+        case bar = "bar"
+        case foo = "foo"
+    }
+}
+
+struct A_Controller: RouteCollection {
+    func boot(routes: RoutesBuilder) throws {
+        routes.get(use:fake).scope(with: A_Model.Scopes.bar.rawValue, by: User.self)
+    }
+}
+```
+
+#### Nicer
+
+Using `Scope`! The `rawValue` is to much noisy, we want it to disappear!
+
+``` Swift
+extension A_Model {
+    enum Scopes {
+        static let foo = "A_Model:foo"
+        static let bar = Scope(resource: "A_Model", action: "bar")
+        static let baz = Scope(resource: "A_Model", action: "baz")
+    }
+}
+
+struct A_Controller: RouteCollection {
+    func boot(routes: RoutesBuilder) throws {
+        routes.get(use:fake).scope(with: A_Model.Scopes.foo, by: User.self)
+        routes.get(use:fake).scope(with: A_Model.Scopes.bar, by: User.self)
+        routes.get(use:fake).scope(with: A_Model.Scopes.baz, by: User.self)
+    }
+}
+```
+
+#### Ultimate
+
+The method above case is still not elegant, because the enumeration cases are static and not raw values!
+
+``` Swift
+extension A_Model: ResoureIndicator {
+    public static var resource: String {
+        "A_Model"
+    }
+}
+
+extension Scope {
+    enum A_Model_Action: String, ScopeAllocator {
+        typealias Resource = A_Model
+        
+        case foo = "foo"
+        case bar = "bar"
+    }
+}
+
+struct A_Controller: RouteCollection {
+    func boot(routes: RoutesBuilder) throws {
+        routes.get(use:fake).scope(with: .A_Model_Action.foo.scope, by: User.self)
+        routes.get(use:fake).scope(with: .A_Model_Action.bar.scope, by: User.self)
+    }
+}
+```
+
+> We find that we can let `ScopeWrapper` conform to `ExpressibleByStringLiteral` and make `enum` much more example. But, we not implement it.
