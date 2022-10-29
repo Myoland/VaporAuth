@@ -214,4 +214,4 @@ struct A_Controller: RouteCollection {
 }
 ```
 
-> We find that we can let `ScopeWrapper` conform to `ExpressibleByStringLiteral` and make `enum` much more example. But, we not implement it.
+> We find that we can let `ScopeWrapper` conform to `ExpressibleByStringLiteral` and make `enum` much more simple. But, we not implement it.
