@@ -8,16 +8,16 @@
 import VaporScope
 import JWT
 
-public struct User: ScopeCarrier {
+public struct User: AuthCarrier {
     enum CodingKeys: String, CodingKey {
         case subject = "sub"
         case expiration = "exp"
-        case scopes = "scopes"
+        case scope = "scope"
     }
     
     var subject: SubjectClaim
     var expiration: ExpirationClaim
-    public var scopes: [String]
+    var scope: ScopeClaim
     
     public func verify(using signer: JWTSigner) throws {
         try self.expiration.verifyNotExpired()
@@ -26,28 +26,28 @@ public struct User: ScopeCarrier {
     public init(
         subject: SubjectClaim,
         expiration: ExpirationClaim,
-        scopes: [String]
+        scope: ScopeClaim
     ) {
         self.subject = subject
         self.expiration = expiration
-        self.scopes = scopes
+        self.scope = scope
     }
 }
 
 extension User: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.subject == rhs.subject
-            && lhs.scopes == rhs.scopes
+            && lhs.scope == rhs.scope
     }
 }
 
 
 extension User {
-    static public func dummy(scope: [String]) -> Self {
+    static public func dummy(scope: ScopeClaim) -> Self {
         return User (
             subject: .init(value: "02F6A5B7-6AE1-4AED-8CCE-F013163A9AC7"),
             expiration: .init(value: Date.init(timeIntervalSinceNow: 3600)),
-            scopes: scope
+            scope: scope
         )
     }
 }

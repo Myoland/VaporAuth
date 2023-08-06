@@ -11,7 +11,7 @@ import Vapor
 /// Print Route and Scope
 ///
 /// Vappr run scope
-public final class ScopesCommand<T: ScopeCarrier>: Command {
+public final class ScopesCommand<T: AuthCarrier>: Command {
     public struct Signature: CommandSignature {
         public init() { }
     }

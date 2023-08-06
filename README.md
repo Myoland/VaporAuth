@@ -1,24 +1,6 @@
 # VaporScope
 
-VaporScope is a library to use Scope in Vapor.
-
-- [Installation](#installation)
-    - [SPM](#swift-package-manager)
-- [Usage](#usage)
-    - [Requirement](#requirement)
-    - [Define a payload](#define-a-payload)
-    - [Tips](#tips)
-        - [Encode and Decode](#encode-and-decode)
-        - [Login](#login)
-        - [Authenticator](#authenticator)
-    - [Scope](#scope)
-        - [ScopeHandler](#scopehandler)
-        - [GuardMiddleware](#guardmiddleware)
-    - [Routes](#routes)
-        - [Easiest](#easiest)
-        - [Nicer](#nicer)
-        - [Ultimate](#ultimate)
-
+VaporAuth is a library for authorities assertion.
 
 ## Installation
 
@@ -26,192 +8,126 @@ VaporScope is a library to use Scope in Vapor.
 
 ```Swift
 dependencies: [
-    .package(url: "https://github.com/Myoland/VaporScope.git", from: "0.1.0"),
+    .package(url: "https://github.com/Myoland/VaporScope.git", from: "1.0.0"),
 ]
 ```
 
-## Usage
-
-### Requirement
-
-This library is built on the `ScopeCarrier` protocol which conforms to `JWTPayload`.
-
-So, it is important that your project is using JWT for authentication.
-
-### Define a payload
-
-
-To start, create a payload and let it conform to the `ScopeCarrier`.
-
-For Example:
+## Quick Look
 
 ```Swift
 public struct User: ScopeCarrier {
     enum CodingKeys: String, CodingKey {...}
     
     public var subject: SubjectClaim
-    public var expiration: ExpirationClaim
-    public var scopes: [String]
+    public var scopes: ScopeClaim
     
     public func verify(using signer: JWTSigner) throws {...}
     
     public init(...) {...}
 }
+
+let app = try Application(.detect())
+app.routes
+    .grouped(User.authenticator())
+    .grouped(\User.scope, "a_scope b_scope")
+    .on(.GET, "a", use: handler)
+
+app.routes
+    .grouped(User.authenticator())
+    .grouped(\User.subject, "sub")
+    .grouped(\User.scope, ["a_scope", "b_scope"])
+    .on(.GET, "a", use: handler)
 ```
 
-For more detail, go to [ScopeCarrier+Testable.swift](./Tests/VaporScopeTests/Utils/ScopeCarrier%2BTestable.swift).
+## Usage
 
-### Tips
+### Create a jwt claim
 
-#### Encode and Decode
+```swift
+public struct ScopeClaim: JWTClaim, Equatable {
 
-Based on `JWTPayload`, it's for sure that you can encode or decode your payload for further transmission.
+    public var value: [String]
 
-You should know how we get the payload and decode it.
-
-```Swift
-// Encode
-let user = User(...)
-let encode = try app.jwt.signers.sign(u)
-
-// Decode
-let payload = try request.jwt.verify(as:User.self)
-```
-
-#### Login
-
-```Swift
-let user = User(...)
-try await User.authenticator().authenticate(jwt: user, for: request)
-
-// OR
-
-let user = User(...)
-try await user.authenticate(request: request)
-```
-
-#### Authenticator
-
-We usually create a `Middleware` to help login a user.
-
-It is how:
-
-```Swift
-route.group(User.authenticator()) {
-    $0.get(use: handler)
-}
-```
-
-### Scope
-
-In this part, we will show how to use `VaporScope` for Scope-based authentication.
-
-In [ScopeHandler.swift](./Sources/VaporScope/ScopeHandler.swift), we define the basic logic for assearting scopes. See `ScopeHandler.assertScopes(_:carried:)` for more detail.
-
-As you can see, when we try to assert the scopes, we define that every required scope should be contained by carried scopes. `Contained` means a required scope should be satisfied by one of the carried scopes.   
-
-#### ScopeHandler
-
-Every request has an independent authentication, so we need a method to check every request.
-
-Use `ScopeHandler` to help you check every request.
-
-```Swift
-try ScopeHandler(request: request).satisfied(with: ["all.part:read"], as: User.self)
-
-// OR
-
-try request.oauth.satisfied(with: self.scopes, as: User.self)
-```
-
-#### GuardMiddleware
-
-We also provide a better way to use ScopeHandler.
-
-```Swift
-route.routes.grouped([
-    User.guardMiddleware(with: ["one", "two"])
-]).get("action", use: handler)
-```
-
-### Routes
-
-Based on `GuardMiddleware`, we can easily use it when building routes.
-
-After some experiments, we found it is better that scopes directly attach to the route endpoint. Creating some language sugar will cause RouteBuilder to be messy.
-
-There are some ways to do this.
-
-All examples can be found in [RouteScopeTests](./Tests/VaporScopeTests/MiddleWare/RouteScopeTests.swift)
-
-#### Easiest
-
-Using String! And you can use `enum` to make it nice.
-
-``` Swift
-
-extension A_Model {
-    enum Scopes: String {
-        case bar = "bar"
-        case foo = "foo"
+    public init(value: [String]) {
+        self.value = value
     }
-}
-
-struct A_Controller: RouteCollection {
-    func boot(routes: RoutesBuilder) throws {
-        routes.get(use:fake).scope(with: A_Model.Scopes.bar.rawValue, by: User.self)
+    
+    public static func == (lhs: ScopeClaim, rhs: ScopeClaim) -> Bool {
+        return Set(rhs.value) == Set(lhs.value)
     }
 }
 ```
 
-#### Nicer
+### Conform to Guardable
 
-Using `Scope`! The `rawValue` is to much noisy, we want it to disappear!
-
-``` Swift
-extension A_Model {
-    enum Scopes {
-        static let foo = "A_Model:foo"
-        static let bar = Scope(resource: "A_Model", action: "bar")
-        static let baz = Scope(resource: "A_Model", action: "baz")
-    }
+```swift
+extension ScopeClaim: Comparable {
+    public static func < (lhs: ScopeClaim, rhs: ScopeClaim) -> Bool {...}
 }
 
-struct A_Controller: RouteCollection {
-    func boot(routes: RoutesBuilder) throws {
-        routes.get(use:fake).scope(with: A_Model.Scopes.foo, by: User.self)
-        routes.get(use:fake).scope(with: A_Model.Scopes.bar, by: User.self)
-        routes.get(use:fake).scope(with: A_Model.Scopes.baz, by: User.self)
+extension ScopeClaim: Guardable {
+    public func hasAuth(required: ScopeClaim) -> Bool {
+        required == self || required < self
     }
 }
 ```
 
-#### Ultimate
+### Use it in authorities assertion
 
-The method above case is still not elegant, because the enumeration cases are static and not raw values!
-
-``` Swift
-extension A_Model: ResoureIndicator {
-    public static var resource: String {
-        "A_Model"
-    }
-}
-
-extension Scope {
-    enum A_Model_Action: String, ScopeAllocator {
-        typealias Resource = A_Model
-        
-        case foo = "foo"
-        case bar = "bar"
-    }
-}
-
-struct A_Controller: RouteCollection {
-    func boot(routes: RoutesBuilder) throws {
-        routes.get(use:fake).scope(with: .A_Model_Action.foo.scope, by: User.self)
-        routes.get(use:fake).scope(with: .A_Model_Action.bar.scope, by: User.self)
-    }
-}
+```swift
+app.routes
+    .grouped(User.authenticator())
+    .grouped(\User.scope, ["a_scope", "b_scope"])
+    .on(.GET, "a", use: handler)
 ```
 
-> We find that we can let `ScopeWrapper` conform to `ExpressibleByStringLiteral` and make `enum` much more simple. But, we not implement it.
+## Detail
+
+
+### Claim encode and decode
+
+```swift
+let scope = ScopeClaim(value: ["a", "b"])
+let encoded = try JSONEncoder().encode(scope)
+let decoded = try JSONDecoder().decode(ScopeClaim.self, from: encoded)
+```
+
+### Predicate
+
+In order to compare value between required auth and cairried auth, we use the philosophy of predicate.
+
+> A definition of logical conditions for constraining a search for a fetch or for in-memory filtering.
+
+In general, to determine whether a user has the authority to access the handler, all we need is a boolean, a result. Thus, we do not care about required auth or any other things, We only care about the given auth and the result. That is what predicate do.
+
+Notice, a predicate support basic logical operation, such as `&&`, `||`, `!`.
+
+In VaporAuth, we provide `AuthPredicate` to help us determine whether a user has the authority.
+
+There are two implementation of `AuthPredicate`, `AuthBasePredicate` and `AuthFieldPredicate`.
+
+```swift
+let a = AuthBasePredicate<Carrier> { user in
+    user.sub == "some"
+}
+let b = AuthFieldPredicate(\Carrier.iss, "any")
+let c = a && b
+
+let _ = a.hasAuth(carrier: user) 
+let _ = b.hasAuth(carrier: user)
+let _ = c.hasAuth(carrier: user)
+
+```
+
+### Authenticate
+
+Before checking the authority, we need to authenticate the user.
+
+When you your info comfort to `JWTPayloa`, it is easy to authenticate. 
+
+
+```swift
+ app.routes
+    .grouped(authenticator())
+    .on(.GET, "a", use: handler)
+```
