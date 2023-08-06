@@ -109,7 +109,15 @@ extension Scope: Equatable {
 /// the same action or one is `ACTION_SET_MARK`.
 /// 4. if one resource contains another, it mean this
 /// resource is the prefix of another。
-extension Scope {
+extension Scope: Comparable {
+    public static func < (lhs: Scope, rhs: Scope) -> Bool {
+        return lhs <= rhs
+    }
+    
+    public static func > (lhs: Scope, rhs: Scope) -> Bool {
+        return lhs >= rhs
+    }
+    
     public static func <= (lhs: Scope, rhs: Scope) -> Bool {
         var r = rhs
         if rhs.action == Scope.ACTION_SET_MARK {

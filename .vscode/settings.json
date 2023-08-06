@@ -1,1 +1,6 @@
-{}
+{
+    "editor.fontSize": 13,
+    "editor.fontWeight": "normal",
+    "editor.fontLigatures": true,
+    "editor.fontFamily": "Cascadia Code PL"
+}
