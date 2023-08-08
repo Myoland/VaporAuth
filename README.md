@@ -8,14 +8,14 @@ VaporAuth is a library for authorities assertion.
 
 ```Swift
 dependencies: [
-    .package(url: "https://github.com/Myoland/VaporScope.git", from: "1.0.0"),
+    .package(url: "https://github.com/Myoland/VaporAuth.git", from: "1.0.0"),
 ]
 ```
 
 ## Quick Look
 
 ```Swift
-public struct User: ScopeCarrier {
+public struct User: AuthCarrier {
     enum CodingKeys: String, CodingKey {...}
     
     public var subject: SubjectClaim
@@ -123,11 +123,11 @@ let _ = c.hasAuth(carrier: user)
 
 Before checking the authority, we need to authenticate the user.
 
-When you your info comfort to `JWTPayloa`, it is easy to authenticate. 
+When you your info comfort to `JWTPayload`, it is easy to authenticate. 
 
 
 ```swift
  app.routes
-    .grouped(authenticator())
+    .grouped(User.authenticator())
     .on(.GET, "a", use: handler)
 ```
