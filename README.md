@@ -15,6 +15,7 @@ dependencies: [
 ## Quick Look
 
 ```Swift
+import VaporAuth
 public struct User: AuthCarrier {
     enum CodingKeys: String, CodingKey {...}
     
