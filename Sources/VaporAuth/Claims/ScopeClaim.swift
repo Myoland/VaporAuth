@@ -22,6 +22,7 @@ public struct ScopeClaim: JWTClaim, Equatable {
     public static func == (lhs: ScopeClaim, rhs: ScopeClaim) -> Bool {
         return Set(rhs.value) == Set(lhs.value)
     }
+
 }
 
 
@@ -42,25 +43,13 @@ extension ScopeClaim: ExpressibleByArrayLiteral {
 
 
 extension ScopeClaim: Comparable {
-    var wrapper: [ScopeWrapper] {
-        self.value.map { ScopeWrapper(raw: $0) }
-    }
-
     public static func < (lhs: ScopeClaim, rhs: ScopeClaim) -> Bool {
-        let requiredWrappers = lhs.wrapper
-        let carriedWrappers = rhs.wrapper
-        
-        for require in requiredWrappers {
-            guard carriedWrappers.contains(where: { require <= $0 }) else  {
-                return false
-            }
-        }
-        return true
+        return Set(lhs.value).isStrictSubset(of: Set(rhs.value))
     }
 }
 
 extension ScopeClaim: Guardable {
     public func hasAuth(required: ScopeClaim) -> Bool {
-        required == self || required < self
+        required <= self
     }
 }

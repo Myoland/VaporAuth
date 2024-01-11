@@ -7,7 +7,7 @@
 
 import Foundation
 import XCTest
-import VaporScope
+import VaporAuth
 
 final class ScopeClaimTests: XCTestCase {
     
@@ -50,6 +50,7 @@ final class ScopeClaimTests: XCTestCase {
         let a = ScopeClaim(value: ["a"])
         let b = ScopeClaim(value: ["a", "b"])
         let c = ScopeClaim(value: ["a", "b", "c"])
+        let d = ScopeClaim(value: ["b", "a"])
         
         assert(a < b)
         assert(b < c)
@@ -66,6 +67,8 @@ final class ScopeClaimTests: XCTestCase {
         assert(b >= a)
         assert(c >= b)
         assert(c >= a)
+        
+        assert(a <= d)
     }
     
     func testHasAuth() async throws {

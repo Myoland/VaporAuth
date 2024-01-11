@@ -5,7 +5,7 @@
 //  Created by AFuture D. on 2022/7/19.
 //
 
-@testable import VaporScope
+@testable import VaporAuth
 import XCTest
 
 final class ScopeTests: XCTestCase {

@@ -6,7 +6,7 @@
 //
 
 
-@testable import VaporScope
+@testable import VaporAuth
 import Foundation
 import XCTest
 import JWT
