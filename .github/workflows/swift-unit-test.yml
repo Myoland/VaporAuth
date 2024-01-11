@@ -1,0 +1,22 @@
+name: Swift Unit Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: Unit Test on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install openssl
+        run: export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && sudo apt-get -o Acquire::Retries=3 -q update && sudo apt-get -o Acquire::Retries=3 -q dist-upgrade -y && sudo apt-get -o Acquire::Retries=3 -q install -y binutils git unzip gnupg2 libc6-dev libcurl4-openssl-dev libedit2 libgcc-11-dev libpython3-dev libsqlite3-0 libstdc++-11-dev libxml2-dev libz3-dev pkg-config python3-lldb-13 zlib1g-dev ca-certificates curl tzdata
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v1
+      - name: Get swift version
+        run: swift --version
+      - name: Build
+        run: swift build
+      - name: Run tests
+        run: swift test
