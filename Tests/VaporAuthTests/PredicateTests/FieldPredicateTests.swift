@@ -7,7 +7,7 @@
 
 import Foundation
 import XCTest
-import VaporScope
+import VaporAuth
 import JWTKit
 
 final class FieldPredicateTests: XCTestCase {

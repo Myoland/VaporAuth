@@ -5,7 +5,7 @@
 //  Created by AFuture D on 2022/9/13.
 //
 
-import VaporScope
+import VaporAuth
 import JWT
 
 public struct User: AuthCarrier {

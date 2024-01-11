@@ -7,7 +7,7 @@
 
 import Foundation
 import XCTest
-import VaporScope
+import VaporAuth
 
 final class ScopeClaimTests: XCTestCase {
     
