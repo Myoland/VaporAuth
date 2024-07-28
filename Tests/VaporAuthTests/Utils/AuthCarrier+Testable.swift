@@ -7,6 +7,7 @@
 
 import VaporAuth
 import JWT
+import Foundation
 
 public struct User: AuthCarrier {
     enum CodingKeys: String, CodingKey {
@@ -19,7 +20,7 @@ public struct User: AuthCarrier {
     var expiration: ExpirationClaim
     var scope: ScopeClaim
     
-    public func verify(using signer: JWTSigner) throws {
+    public func verify(using algorithm: some JWTAlgorithm) async throws {
         try self.expiration.verifyNotExpired()
     }
     

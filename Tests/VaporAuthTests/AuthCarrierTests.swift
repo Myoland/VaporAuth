@@ -15,30 +15,30 @@ final class AuthCarrierTests: XCTestCase {
    var app: Application!
 
    override func setUp() async throws {
-       app = Application(.testing)
-       try app.jwt.signers.use(jwk: JWTHelper.jwkPrivate, isDefault: true)
-       try app.jwt.signers.use(jwk: JWTHelper.jwk)
+       app = try await Application.make(.testing)
+       try await app.jwt.keys.add(jwk: JWTHelper.jwkPrivate, isDefault: true)
+       try await app.jwt.keys.add(jwk: JWTHelper.jwk)
    }
 
    override func tearDown() async throws {
-       app.shutdown()
+       try await app.asyncShutdown()
    }
 
     func testCarrierEncode() async throws {
         let u = User.dummy(scope: ["all.part:read"])
 
-        let encoded = try app.jwt.signers.sign(u)
+        let encoded = try await app.jwt.keys.sign(u)
         let request = Request(application: app, on: app.eventLoopGroup.next())
 
         request.headers.bearerAuthorization = BearerAuthorization(token: encoded)
 
-        let payload = try request.jwt.verify(as:User.self)
+        let payload = try await request.jwt.verify(as:User.self)
         XCTAssertEqual(u, payload)
     }
 
     func testAuthenticator() async throws {
         let u = User.dummy(scope: ["all.part:read"])
-        let encoded = try app.jwt.signers.sign(u)
+        let encoded = try await app.jwt.keys.sign(u)
         
         app.routes.grouped(User.authenticator()).get("") { req -> HTTPStatus in
             try req.auth.require(User.self)
@@ -57,7 +57,7 @@ final class AuthCarrierTests: XCTestCase {
     }
     
     func testCustomAuthenticator() async throws {
-        struct CustomAuthenticator: AsyncJWTAuthenticator {
+        struct CustomAuthenticator: JWTAuthenticator {
             typealias Payload = User
             
             func authenticate(jwt: User, for request: Request) async throws {
@@ -74,7 +74,7 @@ final class AuthCarrierTests: XCTestCase {
         }
         
         let u = User.dummy(scope: ["all.part:read"])
-        let encoded = try app.jwt.signers.sign(u)
+        let encoded = try await app.jwt.keys.sign(u)
         
         try app.test(.GET, "", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: encoded)
@@ -84,7 +84,7 @@ final class AuthCarrierTests: XCTestCase {
         
         
         let v = User.dummy(scope: [])
-        let encodedV = try app.jwt.signers.sign(v)
+        let encodedV = try await app.jwt.keys.sign(v)
         
         try app.test(.GET, "", beforeRequest: { req in
             req.headers.bearerAuthorization = BearerAuthorization(token: encodedV)
@@ -100,7 +100,7 @@ final class AuthCarrierTests: XCTestCase {
         }
 
         let u = User.dummy(scope: ["all.part:read"])
-        let encoded = try app.jwt.signers.sign(u)
+        let encoded = try await app.jwt.keys.sign(u)
 
         try app.testable(method: .running).test(.GET, "login", beforeRequest: { request in
         }, afterResponse: { response in

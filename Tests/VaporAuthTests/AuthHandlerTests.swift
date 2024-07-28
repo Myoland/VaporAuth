@@ -14,13 +14,13 @@ final class AuthHandlerTests: XCTestCase {
     var app: Application!
 
     override func setUp() async throws {
-        app = Application(.testing)
-        try app.jwt.signers.use(jwk: JWTHelper.jwkPrivate, isDefault: true)
-        try app.jwt.signers.use(jwk: JWTHelper.jwk)
+        app = try await Application.make(.testing)
+        try await app.jwt.keys.add(jwk: JWTHelper.jwkPrivate, isDefault: true)
+        try await app.jwt.keys.add(jwk: JWTHelper.jwk)
     }
 
     override func tearDown() async throws {
-        app.shutdown()
+        try await app.asyncShutdown()
     }
     
     func testMissRequest() async throws {

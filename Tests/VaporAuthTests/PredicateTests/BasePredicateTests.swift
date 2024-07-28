@@ -14,7 +14,7 @@ final class BasePredicateTests: XCTestCase {
     
     func testBasic() async throws {
         struct Carrier: AuthCarrier {
-            func verify(using signer: JWTSigner) throws {}
+            func verify(using algorithm: some JWTAlgorithm) async throws {}
         }
         
         let u = Carrier()
@@ -27,7 +27,7 @@ final class BasePredicateTests: XCTestCase {
     
     func testChain() async throws {
         struct Carrier: AuthCarrier {
-            func verify(using signer: JWTSigner) throws {}
+            func verify(using algorithm: some JWTAlgorithm) async throws {}
         }
         
         let u = Carrier()

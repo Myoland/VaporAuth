@@ -16,7 +16,7 @@ final class FieldPredicateTests: XCTestCase {
         struct Carrier: AuthCarrier {
             var sub: SubjectClaim = "sub"
 
-            func verify(using signer: JWTSigner) throws {}
+            func verify(using algorithm: some JWTAlgorithm) async throws {}
         }
         
         let u = Carrier()
@@ -30,7 +30,7 @@ final class FieldPredicateTests: XCTestCase {
             var sub: SubjectClaim = "sub"
             var iss: IssuerClaim = "issuer"
 
-            func verify(using signer: JWTSigner) throws {}
+            func verify(using algorithm: some JWTAlgorithm) async throws {}
         }
         
         let u = Carrier()

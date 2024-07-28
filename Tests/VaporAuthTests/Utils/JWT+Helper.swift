@@ -19,7 +19,7 @@ L4z0tz7QWE0aGuOA32YqCSnrSYKdBTPFDILCdfHonzfP7WMPibz4jWxu_FzNk9s4Dh-uN2lV3NGW10pA
     static let exponent = "AQAB"
     
     static var rsaKey: RSAKey? {
-        RSAKey(modulus: rsaModulus, exponent: "AQAB", privateExponent: rsaPrivateExponent)
+        try! Insecure.RSA.PrivateKey(modulus: rsaModulus, exponent: "AQAB", privateExponent: rsaPrivateExponent)
     }
     
     static var jwk: JWK {
