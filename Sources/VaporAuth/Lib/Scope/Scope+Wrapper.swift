@@ -12,7 +12,7 @@ import Foundation
 public struct ScopeWrapper {
     let scope: Scope?
     let raw: String
-    init(raw: String) {
+    public init(raw: String) {
         self.raw = raw
         self.scope = Scope(rawValue: raw)
     }
